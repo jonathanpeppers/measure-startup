@@ -1,18 +1,19 @@
 ﻿
 using System.Diagnostics;
 
-string processToRun = "dotnet";
-string stdoutText = "asdf";
+string processToRun = args[0];
+string stdoutText = args[1];
 
 var psi = new ProcessStartInfo(processToRun)
 {
 	RedirectStandardError = true,
 	RedirectStandardOutput = true,
 };
-using var p = new Process { StartInfo = psi };
+using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
 
-bool exited = false;
 var resetEvent = new ManualResetEvent(false);
+bool matched = false;
+
 p.ErrorDataReceived += OnDataReceived;
 p.OutputDataReceived += OnDataReceived;
 p.Exited += OnExited;
@@ -24,7 +25,7 @@ p.BeginErrorReadLine();
 p.BeginOutputReadLine();
 
 resetEvent.WaitOne();
-if (exited)
+if (!matched)
 {
 	throw new Exception($"Exited before '{stdoutText}' was printed.");
 }
@@ -36,12 +37,14 @@ void OnDataReceived(object sender, DataReceivedEventArgs e)
 {
 	if (!string.IsNullOrEmpty(e.Data) && e.Data.IndexOf(stdoutText, StringComparison.OrdinalIgnoreCase) != -1)
 	{
+		matched = true;
 		resetEvent.Set();
 	}
 }
 
 void OnExited(object? sender, EventArgs e)
 {
-	exited = true;
+	// Sleep because this fires before OnDataReceived
+	Thread.Sleep(1000);
 	resetEvent.Set();
 }

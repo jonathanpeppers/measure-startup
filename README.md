@@ -48,16 +48,16 @@ This launches `YourApp.exe` recording the time it takes for `appeared`
 to be printed to stdout:
 
 ```
-0:00:01.2314455
+0:00:05.4562167
 Dropping first run...
-0:00:01.399508
-0:00:01.3208399
-0:00:01.3836848
-0:00:01.3858833
-0:00:01.4415977
-Average(ms): 1386.3027399999999
-Std Err(ms): 19.39629404511595
-Std Dev(ms): 43.371431996453644
+0:00:01.3820061
+0:00:01.3802031
+0:00:01.3769286
+0:00:01.3594958
+0:00:01.3526491
+Average(ms): 1370.2565399999999
+Std Err(ms): 5.946923866050407
+Std Dev(ms): 13.297726021504564
 ```
 
 On macOS, build the app for either both architectures:

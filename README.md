@@ -82,16 +82,16 @@ This launches `YourApp` recording the time it takes for `appeared`
 to be printed to stdout:
 
 ```dotnetcli
-0:00:03.4948782
+0:00:03.1464144
 Dropping first run...
-0:00:02.6421445
-0:00:02.6201825
-0:00:02.6118534
-0:00:02.5650879
-0:00:02.605962
-Average(ms): 2609.0460599999997
-Std Err(ms): 12.588167938290285
-Std Dev(ms): 28.147999222200458
+0:00:01.6133342
+0:00:01.5960076
+0:00:01.5935203
+0:00:01.6674307
+0:00:01.6061827
+Average(ms): 1615.2951
+Std Err(ms): 13.511386533624139
+Std Dev(ms): 30.212378759458822
 ```
 
 [android]: https://github.com/jonathanpeppers/maui-profiling/blob/main/scripts/profile.ps1

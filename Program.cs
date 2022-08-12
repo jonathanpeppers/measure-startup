@@ -79,6 +79,11 @@ void OnCommand(string fileName, string args, string stdoutText, int iterations =
 			times.Add(stopwatch.Elapsed);
 		}
 
+		if (!p.HasExited && !p.CloseMainWindow())
+		{
+			p.Kill();
+		}
+
 		void OnDataReceived(object sender, DataReceivedEventArgs e)
 		{
 			if (!string.IsNullOrEmpty(e.Data) && e.Data.IndexOf(stdoutText, StringComparison.OrdinalIgnoreCase) != -1)

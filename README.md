@@ -18,18 +18,15 @@ I may eventually make this a .NET global tool to make this easier.
 
 ## .NET MAUI
 
-To measure a .NET MAUI app, first add somewhere in your app, something
-like:
+To measure a .NET MAUI app, first add a subscription to your main
+`Page`'s `Loaded` event:
 
 ```csharp
-protected override void OnAppearing()
-{
-    base.OnAppearing();
-    Dispatcher.Dispatch(() => Console.WriteLine("appeared"));
-}
+Loaded += (sender, e) => Dispatcher.Dispatch(() => Console.WriteLine("loaded"));
 ```
 
-In an app using `BlazorWebView`, you might consider logging this message
+`Dispatcher` is used to give the app one pass for rendering/layout. In
+an app using `BlazorWebView`, you might consider logging this message
 when the web view finishes loading.
 
 On Windows, build the app for `Release` mode, such as:
@@ -41,23 +38,23 @@ $ dotnet publish -f net6.0-windows10.0.19041.0 -c Release -p:PublishReadyToRun=t
 You could then measure the startup time via:
 
 ```bash
-$ dotnet run -c Release -- C:\src\YourApp\bin\Release\net6.0-windows10.0.19041.0\win10-x64\publish\YourApp.exe appeared
+$ dotnet run -c Release -- C:\src\YourApp\bin\Release\net6.0-windows10.0.19041.0\win10-x64\publish\YourApp.exe loaded
 ```
 
-This launches `YourApp.exe` recording the time it takes for `appeared`
+This launches `YourApp.exe` recording the time it takes for `loaded`
 to be printed to stdout:
 
 ```
-0:00:05.4562167
+0:00:07.0961628
 Dropping first run...
-0:00:01.3820061
-0:00:01.3802031
-0:00:01.3769286
-0:00:01.3594958
-0:00:01.3526491
-Average(ms): 1370.2565399999999
-Std Err(ms): 5.946923866050407
-Std Dev(ms): 13.297726021504564
+0:00:01.4743315
+0:00:01.4700848
+0:00:01.4834235
+0:00:01.4752893
+0:00:01.4695317
+Average(ms): 1474.53216
+Std Err(ms): 2.4945246400065977
+Std Dev(ms): 5.577926666602944
 ```
 
 On macOS, build the app for either both architectures:
@@ -75,10 +72,10 @@ $ dotnet publish -f net6.0-maccatalyst -c Release -r maccatalyst-arm64
 You could then measure the startup time via:
 
 ```dotnetcli
-$ dotnet run -- ~/src/YourApp/bin/Release/net6.0-maccatalyst/maccatalyst-arm64/YourApp.app/Contents/MacOS/YourApp appeared 
+$ dotnet run -- ~/src/YourApp/bin/Release/net6.0-maccatalyst/maccatalyst-arm64/YourApp.app/Contents/MacOS/YourApp loaded 
 ```
 
-This launches `YourApp` recording the time it takes for `appeared`
+This launches `YourApp` recording the time it takes for `loaded`
 to be printed to stdout:
 
 ```dotnetcli

@@ -1,6 +1,11 @@
 ﻿
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
+using BenchmarkDotNet.Loggers;
+using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
+using measure_startup;
 using System.CommandLine;
-using System.Diagnostics;
 
 // Uncommment to test the time "dotnet" takes to print "help"
 //if (args.Length == 0)
@@ -29,7 +34,6 @@ var command = new RootCommand
 	fileOption,
 	argsOption,
 	textOption,
-	iterationsOption,
 };
 command.Name = "measure-startup";
 command.Description = "Measures startup of a process and reports a time.";
@@ -38,82 +42,17 @@ return command.Invoke(args);
 
 void OnCommand(string fileName, string args, string stdoutText, int iterations = 5)
 {
-	var times = new List<TimeSpan>();
+	ProcessBenchmark.FileName = fileName;
+	ProcessBenchmark.Arguments = args;
+	ProcessBenchmark.StdOutText = stdoutText;
 
-	// Do an extra iteration, first time is ignored
-	for (int i = 0; i <= iterations; i++)
-	{
-		var psi = new ProcessStartInfo(fileName, args)
-		{
-			RedirectStandardError = true,
-			RedirectStandardOutput = true,
-		};
-		using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
-
-		var resetEvent = new ManualResetEvent(false);
-		bool matched = false;
-
-		p.ErrorDataReceived += OnDataReceived;
-		p.OutputDataReceived += OnDataReceived;
-		p.Exited += OnExited;
-
-		var stopwatch = new Stopwatch();
-		stopwatch.Start();
-		p.Start();
-		p.BeginErrorReadLine();
-		p.BeginOutputReadLine();
-
-		resetEvent.WaitOne();
-		if (!matched)
-		{
-			throw new Exception($"Exited before '{stdoutText}' was printed.");
-		}
-		stopwatch.Stop();
-		Console.WriteLine($"{stopwatch.Elapsed:g}");
-		if (i == 0)
-		{
-			Console.WriteLine("Dropping first run...");
-		}
-		else
-		{
-			times.Add(stopwatch.Elapsed);
-		}
-
-		if (!p.HasExited && !p.CloseMainWindow())
-		{
-			p.Kill();
-		}
-
-		void OnDataReceived(object sender, DataReceivedEventArgs e)
-		{
-			if (!string.IsNullOrEmpty(e.Data) && e.Data.IndexOf(stdoutText, StringComparison.OrdinalIgnoreCase) != -1)
-			{
-				matched = true;
-				resetEvent.Set();
-			}
-		}
-
-		void OnExited(object? sender, EventArgs e)
-		{
-			// Sleep because this fires before OnDataReceived
-			Thread.Sleep(1000);
-			resetEvent.Set();
-		}
-	}
-
-	double sum = times.Sum(t => t.TotalMilliseconds);
-	double mean = sum / times.Count;
-	double variance = 0;
-	if (times.Count != 1)
-	{
-		foreach (var time in times)
-		{
-			variance += (time.TotalMilliseconds - mean) * (time.TotalMilliseconds - mean) / (times.Count - 1);
-		}
-	}
-	double stddev = Math.Sqrt(variance);
-	double stderr = stddev / Math.Sqrt(times.Count);
-	Console.WriteLine($"Average(ms): {mean}");
-	Console.WriteLine($"Std Err(ms): {stderr}");
-	Console.WriteLine($"Std Dev(ms): {stddev}");
+	var config =
+#if DEBUG
+		new DebugInProcessConfig();
+#else
+		new ManualConfig()
+			.AddLogger(new ConsoleLogger())
+			.AddJob(JobMode<Job>.Default.WithToolchain(new InProcessNoEmitToolchain(logOutput: true)));
+#endif
+    var summary = BenchmarkRunner.Run<ProcessBenchmark>(config);
 }

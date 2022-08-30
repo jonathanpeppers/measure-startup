@@ -1,4 +1,5 @@
 ﻿
+using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Loggers;
@@ -46,13 +47,23 @@ void OnCommand(string fileName, string args, string stdoutText, int iterations =
 	ProcessBenchmark.Arguments = args;
 	ProcessBenchmark.StdOutText = stdoutText;
 
+
+	var job = JobMode<Job>.Default.WithToolchain(InProcessNoEmitToolchain.Instance)
+		.WithWarmupCount(1)
+		.WithIterationCount(iterations);
+
 	var config =
+		new ManualConfig
+		{
+			Options =
 #if DEBUG
-		new DebugInProcessConfig();
-#else
-		new ManualConfig()
-			.AddLogger(new ConsoleLogger())
-			.AddJob(JobMode<Job>.Default.WithToolchain(new InProcessNoEmitToolchain(logOutput: true)));
+				ConfigOptions.KeepBenchmarkFiles | ConfigOptions.DisableOptimizationsValidator |
 #endif
-    var summary = BenchmarkRunner.Run<ProcessBenchmark>(config);
+				ConfigOptions.DisableLogFile
+		}
+		.AddLogger(ConsoleLogger.Default)
+		.AddColumnProvider(DefaultColumnProviders.Instance)
+		.AddJob(job);
+
+	var summary = BenchmarkRunner.Run<ProcessBenchmark>(config);
 }
